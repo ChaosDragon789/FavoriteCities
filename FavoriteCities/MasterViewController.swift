@@ -25,12 +25,19 @@ class MasterViewController: UITableViewController {
             let controllers = split.viewControllers
             detailViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? DetailViewController
         }
+        
+        if let savedData = defaults.object(forKey: "data") as? Data {
+            if let decoded = try? JSONDecoder().decode([City].self, from:savedData) {
+                cities = decoded
+            }
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
         clearsSelectionOnViewWillAppear = splitViewController!.isCollapsed
         super.viewWillAppear(animated)
         tableView.reloadData()
+        saveData()
     }
     
     @objc
@@ -60,6 +67,7 @@ class MasterViewController: UITableViewController {
                 let city = City(name: cityTextField.text!, state: stateTextField.text!, population: population,image: image.pngData()!)
                 self.cities.append(city)
                 self.tableView.reloadData()
+                self.saveData()
                 
                 
             }
@@ -112,15 +120,27 @@ override func tableView(_ tableView: UITableView, commit editingStyle: UITableVi
     if editingStyle == .delete {
         cities.remove(at: indexPath.row)
         tableView.deleteRows(at: [indexPath], with: .fade)
+        saveData()
     } else if editingStyle == .insert {
         // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view.
+        
     }
 }
     override func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         let objectToMove = cities.remove(at: sourceIndexPath.row)
         cities.insert(objectToMove, at: destinationIndexPath.row)
+        saveData()
     }
 
+    let defaults = UserDefaults.standard
+    
+    func saveData(){
+        if let encoded = try? JSONEncoder().encode(cities){
+            defaults.set(encoded,forKey: "data")
+        }
+    }
+    
+    
 
 }
 
